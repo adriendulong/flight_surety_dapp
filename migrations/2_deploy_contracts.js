@@ -9,15 +9,15 @@ module.exports = function(deployer) {
   .then(() => {
     return deployer.deploy(FlightSuretyApp)
       .then(() => {
-        // let config = {
-        //   localhost: {
-        //     url: 'http://localhost:8545',
-        //     dataAddress: FlightSuretyData.address,
-        //     appAddress: FlightSuretyApp.address
-        //   }
-        // }
-        // fs.writeFileSync(__dirname + '/../src/dapp/config.json',JSON.stringify(config, null, '\t'), 'utf-8');
-        // fs.writeFileSync(__dirname + '/../src/server/config.json',JSON.stringify(config, null, '\t'), 'utf-8');
+        let config = {
+          localhost: {
+            url: 'http://localhost:8545',
+            dataAddress: FlightSuretyData.address,
+            appAddress: FlightSuretyApp.address
+          }
+        }
+        fs.writeFileSync(__dirname + '/../src/dapp/config.json',JSON.stringify(config, null, '\t'), 'utf-8');
+        fs.writeFileSync(__dirname + '/../src/server/config.json',JSON.stringify(config, null, '\t'), 'utf-8');
       });
   });
 }
