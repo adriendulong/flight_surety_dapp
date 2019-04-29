@@ -128,8 +128,7 @@ contract FlightSuretyApp {
 
 		voteAirlines[msg.sender]++;
 		// If the number of votes is greater than 50% we must approve the airline
-		if(voteAirlines[msg.sender] > flightSuretyData.getNumberRegisteredAirlines().div(2)){
-			//TODO: approve the airline, emit an event	
+		if(voteAirlines[msg.sender] > flightSuretyData.getNumberRegisteredAirlines().div(2)){	
 			flightSuretyData.registerAirline(airline);
 		}
 		else return voteAirlines[msg.sender];
@@ -140,12 +139,9 @@ contract FlightSuretyApp {
 	* @dev Add an airline
 	* The first four airlines can be added by an existing airline
 	*/
-	function addAirline(address airline) public isRegisteredAirline returns(bool){
-		if (flightSuretyData.getNumberRegisteredAirlines() < 4) {
-			flightSuretyData.registerAirline(airline);
-			return true;
-		}
-		else return false;
+	function addAirline(address airline) public isRegisteredAirline {
+		require(flightSuretyData.getNumberRegisteredAirlines() < 4, "FlightSuretyApp::addAirline - Already 4 airlines have been added, you must pas by the queue process");
+		flightSuretyData.registerAirline(airline);
 	}
 
 

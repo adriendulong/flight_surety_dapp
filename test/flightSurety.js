@@ -1,24 +1,59 @@
+// Import all required modules from openzeppelin-test-helpers
+const { BN, constants, expectEvent, shouldFail } = require('openzeppelin-test-helpers');
+
+const { expect } = require('chai');
+
 const FlightSuretyApp = artifacts.require("FlightSuretyApp");
 const FlightSuretyData = artifacts.require("FlightSuretyData");
 
 contract('Flight Surety Tests', async (accounts) => {
 
   before('setup contract', async () => {
-    // await config.flightSuretyData.authorizeCaller(config.flightSuretyApp.address);
+    const flightSuretyData = await FlightSuretyData.deployed();
+    await flightSuretyData.authorizeContract(FlightSuretyApp.address);
   });
 
   /****************************************************************************************/
   /* Operations and Settings                                                              */
   /****************************************************************************************/
 
-  it(`(multiparty) has correct initial isOperational() value`, async function () {
+  // it(`(multiparty) has correct initial isOperational() value`, async function () {
 
-    // Get operating status
-    const flightSuretyData = await FlightSuretyData.deplyed();
-    let status = await flightSuretyData.isOperational();
-    assert.equal(status, true, "Incorrect initial operating status value");
+  //   // Get operating status
+  //   const flightSuretyData = await FlightSuretyData.deplyed();
+  //   let status = await flightSuretyData.isOperational();
+  //   assert.equal(status, true, "Incorrect initial operating status value");
+
+  // });
+
+  it(`Add 3 more airlines and no more`, async function () {
+
+    // Get an instance of the deployed contract
+    const flightSuretyApp = await FlightSuretyApp.deployed();
+
+    // Add an airline
+    const airlineOne = await flightSuretyApp.addAirline(accounts[2], {from: accounts[1]});
+    // Check that an event is emitted by the FlightSuretyData contract
+    expectEvent.inTransaction(airlineOne.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[2] });
+
+    // Repeat the same for two more airlines
+    const airlineTwo = await flightSuretyApp.addAirline(accounts[3], {from: accounts[1]});
+    expectEvent.inTransaction(airlineTwo.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[3] });
+    const airlineThree = await flightSuretyApp.addAirline(accounts[4], {from: accounts[1]});
+    expectEvent.inTransaction(airlineThree.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[4] });
+
+    // Check that a fifth one will fail
+    shouldFail.reverting.withMessage(flightSuretyApp.addAirline(accounts[5], { from: accounts[1] }), "FlightSuretyApp::addAirline - Already 4 airlines have been added, you must pas by the queue process");
 
   });
+
+  it("Can't add an airline if this is not an airline", async function() {
+     // Get an instance of the deployed contract
+     const flightSuretyApp = await FlightSuretyApp.deployed();
+
+     // Can't add an airline if the caller is not an airline
+     shouldFail.reverting.withMessage(flightSuretyApp.addAirline(accounts[5], { from: accounts[10] }), "FlightSuretyApp::isRegisteredAirline - This airline is not registered");
+  })
 
 //   it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
 
