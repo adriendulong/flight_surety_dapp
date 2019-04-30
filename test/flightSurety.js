@@ -34,13 +34,13 @@ contract('Flight Surety Tests', async (accounts) => {
     // Add an airline
     const airlineOne = await flightSuretyApp.addAirline(accounts[2], {from: accounts[1]});
     // Check that an event is emitted by the FlightSuretyData contract
-    expectEvent.inTransaction(airlineOne.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[2] });
+    expectEvent.inTransaction(airlineOne.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[2], countAirlines: new BN(2) });
 
     // Repeat the same for two more airlines
     const airlineTwo = await flightSuretyApp.addAirline(accounts[3], {from: accounts[1]});
-    expectEvent.inTransaction(airlineTwo.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[3] });
+    expectEvent.inTransaction(airlineTwo.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[3], countAirlines: new BN(3) });
     const airlineThree = await flightSuretyApp.addAirline(accounts[4], {from: accounts[1]});
-    expectEvent.inTransaction(airlineThree.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[4] });
+    expectEvent.inTransaction(airlineThree.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[4], countAirlines: new BN(4) });
 
     // Check that a fifth one will fail
     shouldFail.reverting.withMessage(flightSuretyApp.addAirline(accounts[5], { from: accounts[1] }), "FlightSuretyApp::addAirline - Already 4 airlines have been added, you must pas by the queue process");
@@ -54,6 +54,27 @@ contract('Flight Surety Tests', async (accounts) => {
      // Can't add an airline if the caller is not an airline
      shouldFail.reverting.withMessage(flightSuretyApp.addAirline(accounts[5], { from: accounts[10] }), "FlightSuretyApp::isRegisteredAirline - This airline is not registered");
   })
+
+  it("Consensus for a new airline", async function() {
+    // Get an instance of the deployed contract
+    const flightSuretyApp = await FlightSuretyApp.deployed();
+
+    const airlineQueued = accounts[5];
+
+    // Queue a new airline
+    const response = await flightSuretyApp.queueAirline({from: airlineQueued});
+    expectEvent.inLogs(response.logs, 'AirlineQueued', { airline: airlineQueued});
+
+    // Vote for the airline
+    await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[1]});
+    await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[2]});
+    // The third vote should trigger an event letting us know that the airlineQueued has been registered 
+    // since we reached more than 50% of the votes
+    const votes = await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[3]});
+    expectEvent.inTransaction(votes.tx, FlightSuretyData, 'AirlineRegistered', { airline: airlineQueued });
+    
+    
+ })
 
 //   it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
 

@@ -39,6 +39,8 @@ contract FlightSuretyApp {
 	mapping(address => uint256) private voteAirlines;										// Mapping btw airline address and vote numbers
 	mapping(address => bool) private airlineQueue;
 
+	event AirlineQueued(address airline);
+
 	/********************************************************************************************/
 	/*                                       FUNCTION MODIFIERS                                 */
 	/********************************************************************************************/
@@ -109,15 +111,16 @@ contract FlightSuretyApp {
 	 * @return success bool representing if the airline has been added to the queue
 	 * @return votes uint256 number of votes the airline has
 	*/
-	function queueAirline() public returns(bool success, uint256 votes) {
+	function queueAirline() public {
 		// We can't queue an airline before 4 airlines are registered
-		require(flightSuretyData.getNumberRegisteredAirlines() < 4, "FlightSuretyApp::registerAirline - Can't add an airline to the registering queue since we don't yet have 4 airlines registered");
+		require(flightSuretyData.getNumberRegisteredAirlines() >= 4, "FlightSuretyApp::registerAirline - Can't add an airline to the registering queue since we don't yet have 4 airlines registered");
+		require(!flightSuretyData.isAirlineRegistered(msg.sender), "FlightSuretyApp::registerAirline - This airline is already registered");
 
 		// Add the airline to the queue
 		airlineQueue[msg.sender] = true;
 
-		// Return the infos
-		return (airlineQueue[msg.sender], voteAirlines[msg.sender]);
+		// Emit relative event
+		emit AirlineQueued(msg.sender);
 	}
 
 	/**

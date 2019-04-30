@@ -12,11 +12,11 @@ contract FlightSuretyData is IFlightSuretyData {
 
 	address private contractOwner;                                      // Account used to deploy contract
 	bool private operational = true;                                    // Blocks all state changes throughout the contract if false
-	uint private countRegisteredAirlines = 0;													// A counter of registered airlines
+	uint public countRegisteredAirlines = 0;													// A counter of registered airlines
 	mapping(address => uint) private registeredAirlines;								// Registered airlines
 	mapping(address => uint) private authorizedContracts;						// Contracts authorized to call this one
 
-	event AirlineRegistered(address airline);
+	event AirlineRegistered(address airline, uint countAirlines);
 	/********************************************************************************************/
 	/*                                       EVENT DEFINITIONS                                  */
 	/********************************************************************************************/
@@ -104,8 +104,8 @@ contract FlightSuretyData is IFlightSuretyData {
 	*/
 	function _registerAirline(address airline) internal {
 		registeredAirlines[airline] = 1;
-		countRegisteredAirlines++;
-		emit AirlineRegistered(airline);
+		countRegisteredAirlines = countRegisteredAirlines.add(1);
+		emit AirlineRegistered(airline, countRegisteredAirlines);
 	}
 
 	/********************************************************************************************/
