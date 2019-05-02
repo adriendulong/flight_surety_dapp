@@ -65,6 +65,8 @@ contract('Flight Surety Tests', async (accounts) => {
     const response = await flightSuretyApp.queueAirline({from: airlineQueued});
     expectEvent.inLogs(response.logs, 'AirlineQueued', { airline: airlineQueued});
 
+    // Only airlines should be able  
+    await shouldFail.reverting.withMessage(flightSuretyApp.voteAirline(airlineQueued, {from: accounts[10]}), "FlightSuretyApp::isRegisteredAirline - This airline is not registered");
     // Vote for the airline
     await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[1]});
     await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[2]});

@@ -13,7 +13,8 @@ contract FlightSuretyData is IFlightSuretyData {
 	address private contractOwner;                                      // Account used to deploy contract
 	bool private operational = true;                                    // Blocks all state changes throughout the contract if false
 	uint public countRegisteredAirlines = 0;													// A counter of registered airlines
-	mapping(address => uint) private registeredAirlines;								// Registered airlines
+	mapping(address => bool) private registeredAirlines;						// Registered airlines
+	mapping(address => bool) private partipatingAirlines;						// Airlines that have funds the smart contract and are able to participate
 	mapping(address => uint) private authorizedContracts;						// Contracts authorized to call this one
 
 	event AirlineRegistered(address airline, uint countAirlines);
@@ -36,9 +37,6 @@ contract FlightSuretyData is IFlightSuretyData {
 	/********************************************************************************************/
 	/*                                       FUNCTION MODIFIERS                                 */
 	/********************************************************************************************/
-
-	// Modifiers help avoid duplication of code. They are typically used to validate something
-	// before a function is allowed to be executed.
 
 	/**
 	* @dev Modifier that requires the "operational" boolean variable to be "true"
@@ -68,7 +66,7 @@ contract FlightSuretyData is IFlightSuretyData {
 	* @dev Modifier that checks that an airline is registered
 	*/
 	modifier isRegisteredAirline(address airline) {
-		 require(registeredAirlines[airline] == 1, "FlightSuretyData::isRegisteredAirline: This airline is not registered");
+		 require(registeredAirlines[airline], "FlightSuretyData::isRegisteredAirline: This airline is not registered");
 		 _;
 	}
 
@@ -103,7 +101,7 @@ contract FlightSuretyData is IFlightSuretyData {
 	* @dev Add an airline to the registered ones
 	*/
 	function _registerAirline(address airline) internal {
-		registeredAirlines[airline] = 1;
+		registeredAirlines[airline] = true;
 		countRegisteredAirlines = countRegisteredAirlines.add(1);
 		emit AirlineRegistered(airline, countRegisteredAirlines);
 	}
@@ -130,9 +128,26 @@ contract FlightSuretyData is IFlightSuretyData {
 
 	/**
 	* @dev Tell if an airline is registered or not
+	* @param airline address of the airline we want to know about
 	*/
 	function isAirlineRegistered(address airline) external view requireIsCallerAuthorized returns(bool){
-		return (registeredAirlines[airline] == 1);
+		return (registeredAirlines[airline]);
+	}
+
+	/** 
+	* @dev Let airline funds the smart contract
+	* @param airline address of the airline that funds the smart contract
+	*/
+	function fund(address airline) external payable isRegisteredAirline(airline) requireIsCallerAuthorized {
+		partipatingAirlines[airline] = true;
+	}
+
+	/**
+	* @dev Tell if an airline can participate
+	* @param airline address of the airline we want to know about
+	*/
+	function isAirlineParticipating(address airline) external view requireIsCallerAuthorized returns(bool){
+		return (partipatingAirlines[airline]);
 	}
 
 
