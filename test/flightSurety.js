@@ -58,6 +58,7 @@ contract('Flight Surety Tests', async (accounts) => {
   it("Consensus for a new airline", async function() {
     // Get an instance of the deployed contract
     const flightSuretyApp = await FlightSuretyApp.deployed();
+    const flightSuretyData = await FlightSuretyData.deployed();
 
     const airlineQueued = accounts[5];
 
@@ -70,6 +71,7 @@ contract('Flight Surety Tests', async (accounts) => {
     // Vote for the airline
     await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[1]});
     await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[2]});
+
     // The third vote should trigger an event letting us know that the airlineQueued has been registered 
     // since we reached more than 50% of the votes
     const votes = await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[3]});
@@ -77,6 +79,39 @@ contract('Flight Surety Tests', async (accounts) => {
     
     
  })
+
+ it("Ariline can't participate if did not fund the contract", async function() {
+  // Get an instance of the deployed contract
+  console.log("LAST");
+  const flightSuretyApp = await FlightSuretyApp.deployed();
+
+  const airlineQueued = accounts[5];
+
+  // Check that the ariline can't participate
+  await shouldFail.reverting.withMessage(flightSuretyApp.registerFlight(web3.utils.asciiToHex("ND007"), {from: airlineQueued}), "FlightSuretyApp::isParticipatingAirline - This airline is not yet able to participate");
+  
+  
+})
+
+ it("Ariline can fund the contract", async function() {
+   console.log("AGAIN");
+  // Get an instance of the deployed contract
+  const flightSuretyApp = await FlightSuretyApp.deployed();
+
+  const airlineQueued = accounts[5];
+  const funds = web3.utils.toWei("10");
+
+  // Participate
+  const response = await flightSuretyApp.submitFunds({from: airlineQueued, value: funds});
+  // Check that we receive the events that notify us that the airline has been addded to the list of airline that can participate
+  expectEvent.inTransaction(response.tx, FlightSuretyData, 'AirlineParticipating', { airline: airlineQueued });
+  
+  // Should be able to register a flight
+  const flightName = "ND007";
+  const flight = await flightSuretyApp.registerFlight(web3.utils.asciiToHex(flightName), {from: airlineQueued});
+  expectEvent.inLogs(flight.logs, 'FlightAdded', { airline: airlineQueued});
+  
+})
 
 //   it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
 
