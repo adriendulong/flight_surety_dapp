@@ -168,12 +168,13 @@ contract FlightSuretyApp {
 
 	/**
 	* @dev Register a future flight for insuring.
-	*
+	* @param flightNumber bytes32 the number of the flight to register
 	*/
 	function registerFlight(bytes32 flightNumber) external isRegisteredAirline isParticipatingAirline {
+		require(!flights[flightNumber].isRegistered, "FlightSuretyApp::registerFlight - This flight number is already registered");
 		// Create a new Flight
 		flights[flightNumber] = Flight({
-			isRegistered: false,
+			isRegistered: true,
 			statusCode: STATUS_CODE_UNKNOWN,
 			updatedTimestamp: block.timestamp,
 			airline: msg.sender
@@ -186,6 +187,7 @@ contract FlightSuretyApp {
 
 	/**
 	* @dev Get the list of flights number
+	* @return bytes32[] array of flight numbers
 	*/
 	function getFlightsNumber() public view returns(bytes32[] memory) {
 		return flightNumbers;

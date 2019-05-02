@@ -82,7 +82,6 @@ contract('Flight Surety Tests', async (accounts) => {
 
  it("Ariline can't participate if did not fund the contract", async function() {
   // Get an instance of the deployed contract
-  console.log("LAST");
   const flightSuretyApp = await FlightSuretyApp.deployed();
 
   const airlineQueued = accounts[5];
@@ -93,8 +92,7 @@ contract('Flight Surety Tests', async (accounts) => {
   
 })
 
- it("Ariline can fund the contract", async function() {
-   console.log("AGAIN");
+ it("Arline can fund the contract to participate", async function() {
   // Get an instance of the deployed contract
   const flightSuretyApp = await FlightSuretyApp.deployed();
 
@@ -112,6 +110,29 @@ contract('Flight Surety Tests', async (accounts) => {
   expectEvent.inLogs(flight.logs, 'FlightAdded', { airline: airlineQueued});
   
 })
+
+it("Flight creation works", async function() {
+ // Get an instance of the deployed contract
+ const flightSuretyApp = await FlightSuretyApp.deployed();
+
+ const flightsBeginning = await flightSuretyApp.getFlightsNumber();
+
+ const flightName = "ND008";
+ const flightAdded = await flightSuretyApp.registerFlight(web3.utils.asciiToHex(flightName), {from: accounts[5]});
+ expectEvent.inLogs(flightAdded.logs, 'FlightAdded', { airline: accounts[5]});
+
+ const flightsAfter = await flightSuretyApp.getFlightsNumber();
+ assert.equal(flightsAfter.length, (flightsBeginning.length + 1), "Flight not added");
+ 
+})
+
+it("Can't add a flight with a number that is already registered", async function() {
+  // Get an instance of the deployed contract
+  const flightSuretyApp = await FlightSuretyApp.deployed();
+ 
+  const flightName = "ND008";
+  await shouldFail.reverting.withMessage(flightSuretyApp.registerFlight(web3.utils.asciiToHex(flightName), {from: accounts[5]}), "FlightSuretyApp::registerFlight - This flight number is already registered");
+ })
 
 //   it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
 
