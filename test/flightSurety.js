@@ -8,9 +8,16 @@ const FlightSuretyData = artifacts.require("FlightSuretyData");
 
 contract('Flight Surety Tests', async (accounts) => {
 
+  const firstAirline = accounts[1];
+
   before('setup contract', async () => {
     const flightSuretyData = await FlightSuretyData.deployed();
     await flightSuretyData.authorizeContract(FlightSuretyApp.address);
+    const flightSuretyApp = await FlightSuretyApp.deployed();
+
+    // fund firstAirline
+    const funds = web3.utils.toWei("10");
+    await flightSuretyApp.submitFunds({from: firstAirline, value: funds});
   });
 
   /****************************************************************************************/
@@ -32,18 +39,18 @@ contract('Flight Surety Tests', async (accounts) => {
     const flightSuretyApp = await FlightSuretyApp.deployed();
 
     // Add an airline
-    const airlineOne = await flightSuretyApp.addAirline(accounts[2], {from: accounts[1]});
+    const airlineOne = await flightSuretyApp.addAirline(accounts[2], {from: firstAirline});
     // Check that an event is emitted by the FlightSuretyData contract
     expectEvent.inTransaction(airlineOne.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[2], countAirlines: new BN(2) });
 
     // Repeat the same for two more airlines
-    const airlineTwo = await flightSuretyApp.addAirline(accounts[3], {from: accounts[1]});
+    const airlineTwo = await flightSuretyApp.addAirline(accounts[3], {from: firstAirline});
     expectEvent.inTransaction(airlineTwo.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[3], countAirlines: new BN(3) });
-    const airlineThree = await flightSuretyApp.addAirline(accounts[4], {from: accounts[1]});
+    const airlineThree = await flightSuretyApp.addAirline(accounts[4], {from: firstAirline});
     expectEvent.inTransaction(airlineThree.tx, FlightSuretyData, 'AirlineRegistered', { airline: accounts[4], countAirlines: new BN(4) });
 
     // Check that a fifth one will fail
-    shouldFail.reverting.withMessage(flightSuretyApp.addAirline(accounts[5], { from: accounts[1] }), "FlightSuretyApp::addAirline - Already 4 airlines have been added, you must pas by the queue process");
+    shouldFail.reverting.withMessage(flightSuretyApp.addAirline(accounts[5], { from: firstAirline}), "FlightSuretyApp::addAirline - Already 4 airlines have been added, you must pas by the queue process");
 
   });
 
@@ -52,13 +59,19 @@ contract('Flight Surety Tests', async (accounts) => {
      const flightSuretyApp = await FlightSuretyApp.deployed();
 
      // Can't add an airline if the caller is not an airline
-     shouldFail.reverting.withMessage(flightSuretyApp.addAirline(accounts[5], { from: accounts[10] }), "FlightSuretyApp::isRegisteredAirline - This airline is not registered");
+     await shouldFail.reverting.withMessage(flightSuretyApp.addAirline(accounts[5], { from: accounts[10] }), "FlightSuretyApp::isParticipatingAirline - This airline is not yet able to participate");
   })
 
   it("Consensus for a new airline", async function() {
     // Get an instance of the deployed contract
     const flightSuretyApp = await FlightSuretyApp.deployed();
     const flightSuretyData = await FlightSuretyData.deployed();
+
+    // Fund airline 2, 3 and 4
+    const funds = web3.utils.toWei("10");
+    await flightSuretyApp.submitFunds({from: accounts[2], value: funds});
+    await flightSuretyApp.submitFunds({from: accounts[3], value: funds});
+    await flightSuretyApp.submitFunds({from: accounts[4], value: funds});
 
     const airlineQueued = accounts[5];
 
@@ -67,7 +80,7 @@ contract('Flight Surety Tests', async (accounts) => {
     expectEvent.inLogs(response.logs, 'AirlineQueued', { airline: airlineQueued});
 
     // Only airlines should be able  
-    await shouldFail.reverting.withMessage(flightSuretyApp.voteAirline(airlineQueued, {from: accounts[10]}), "FlightSuretyApp::isRegisteredAirline - This airline is not registered");
+    await shouldFail.reverting.withMessage(flightSuretyApp.voteAirline(airlineQueued, {from: accounts[10]}), "FlightSuretyApp::isParticipatingAirline - This airline is not yet able to participate");
     // Vote for the airline
     await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[1]});
     await flightSuretyApp.voteAirline(airlineQueued, {from: accounts[2]});
@@ -87,7 +100,8 @@ contract('Flight Surety Tests', async (accounts) => {
   const airlineQueued = accounts[5];
 
   // Check that the ariline can't participate
-  await shouldFail.reverting.withMessage(flightSuretyApp.registerFlight(web3.utils.asciiToHex("ND007"), {from: airlineQueued}), "FlightSuretyApp::isParticipatingAirline - This airline is not yet able to participate");
+  let timestamp = Math.floor(Date.now() / 1000);
+  await shouldFail.reverting.withMessage(flightSuretyApp.registerFlight("ND007", timestamp, {from: airlineQueued}), "FlightSuretyData::needAirlineParticipating: This airline is not yet able to participate");
   
   
 })
@@ -106,8 +120,10 @@ contract('Flight Surety Tests', async (accounts) => {
   
   // Should be able to register a flight
   const flightName = "ND007";
-  const flight = await flightSuretyApp.registerFlight(web3.utils.asciiToHex(flightName), {from: airlineQueued});
-  expectEvent.inLogs(flight.logs, 'FlightAdded', { airline: airlineQueued});
+  let timestamp = Math.floor(Date.now() / 1000);
+  const flight = await flightSuretyApp.registerFlight(flightName, timestamp, {from: airlineQueued});
+  expectEvent.inTransaction(flight.tx, FlightSuretyData, 'FlightAdded', { airline: airlineQueued, flight: flightName });
+
   
 })
 
@@ -115,24 +131,17 @@ it("Flight creation works", async function() {
  // Get an instance of the deployed contract
  const flightSuretyApp = await FlightSuretyApp.deployed();
 
- const flightsBeginning = await flightSuretyApp.getFlightsNumber();
+ const flightsBeginning = await flightSuretyApp.getFlightKeys();
 
+ let timestamp = Math.floor(Date.now() / 1000);
  const flightName = "ND008";
- const flightAdded = await flightSuretyApp.registerFlight(web3.utils.asciiToHex(flightName), {from: accounts[5]});
- expectEvent.inLogs(flightAdded.logs, 'FlightAdded', { airline: accounts[5]});
+ const flightAdded = await flightSuretyApp.registerFlight(flightName, timestamp, {from: accounts[5]});
+ expectEvent.inTransaction(flightAdded.tx, FlightSuretyData, 'FlightAdded', { airline: accounts[5], flight: flightName });
 
- const flightsAfter = await flightSuretyApp.getFlightsNumber();
+ const flightsAfter = await flightSuretyApp.getFlightKeys();
  assert.equal(flightsAfter.length, (flightsBeginning.length + 1), "Flight not added");
  
 })
-
-it("Can't add a flight with a number that is already registered", async function() {
-  // Get an instance of the deployed contract
-  const flightSuretyApp = await FlightSuretyApp.deployed();
- 
-  const flightName = "ND008";
-  await shouldFail.reverting.withMessage(flightSuretyApp.registerFlight(web3.utils.asciiToHex(flightName), {from: accounts[5]}), "FlightSuretyApp::registerFlight - This flight number is already registered");
- })
 
 //   it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
 

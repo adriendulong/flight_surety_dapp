@@ -6,4 +6,6 @@ interface IFlightSuretyData {
   function isAirlineRegistered(address airline) external view returns(bool);
   function fund(address airline) external payable;
   function isAirlineParticipating(address airline) external view returns(bool);
+  function registerFlight(string calldata flight, uint256 timestamp, address airline) external;
+  function getFlightKeys() external view returns(bytes32[] memory);
 }

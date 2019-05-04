@@ -10,15 +10,35 @@ contract FlightSuretyData is IFlightSuretyData {
 	/*                                       DATA VARIABLES                                     */
 	/********************************************************************************************/
 
+	// Flight status codees
+	uint8 private constant STATUS_CODE_UNKNOWN = 0;
+	uint8 private constant STATUS_CODE_ON_TIME = 10;
+	uint8 private constant STATUS_CODE_LATE_AIRLINE = 20;
+	uint8 private constant STATUS_CODE_LATE_WEATHER = 30;
+	uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
+	uint8 private constant STATUS_CODE_LATE_OTHER = 50;
+
+	struct Flight {
+		bool isRegistered;
+		uint8 statusCode;
+		uint256 timestamp;
+		address airline;
+		string flight;
+	}
+
 	address private contractOwner;                                      // Account used to deploy contract
 	bool private operational = true;                                    // Blocks all state changes throughout the contract if false
 	uint public countRegisteredAirlines = 0;													// A counter of registered airlines
 	mapping(address => bool) private registeredAirlines;						// Registered airlines
 	mapping(address => uint) private partipatingAirlines;						// Airlines that have funds the smart contract and are able to participate
 	mapping(address => uint) private authorizedContracts;						// Contracts authorized to call this one
+	mapping(bytes32 => Flight) private flights;
+
+	bytes32[] public flightKeys;
 
 	event AirlineRegistered(address airline, uint countAirlines);
 	event AirlineParticipating(address airline, uint participation);
+	event FlightAdded(bytes32 flightKey, address airline, string flight);
 	/********************************************************************************************/
 	/*                                       EVENT DEFINITIONS                                  */
 	/********************************************************************************************/
@@ -68,6 +88,14 @@ contract FlightSuretyData is IFlightSuretyData {
 	*/
 	modifier isRegisteredAirline(address airline) {
 		 require(registeredAirlines[airline], "FlightSuretyData::isRegisteredAirline: This airline is not registered");
+		 _;
+	}
+
+	/**
+	* @dev Modifier that checks that an airline is registered
+	*/
+	modifier needAirlineParticipating(address airline) {
+		 require(partipatingAirlines[airline] != 0, "FlightSuretyData::needAirlineParticipating: This airline is not yet able to participate");
 		 _;
 	}
 
@@ -152,6 +180,42 @@ contract FlightSuretyData is IFlightSuretyData {
 		return (partipatingAirlines[airline] != 0);
 	}
 
+	/*************************************/
+	/********** FLIGHT FUNCTIONS *********/
+	/*************************************/
+
+	/**
+	* @dev Register a future flight for insuring.
+	* @param flight string the name of the flight
+	* @param timestamp uint256 flight timestamp
+	* @param airline address the address of the airline that register this flight
+	*/
+
+	function registerFlight(string calldata flight, uint256 timestamp, address airline) external requireIsCallerAuthorized needAirlineParticipating(airline) {
+		bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+		require(!flights[flightKey].isRegistered, "FlightSuretyData::registerFlight - This flight is already registered");
+		// Create a new Flight
+		flights[flightKey] = Flight({
+			isRegistered: true,
+			statusCode: STATUS_CODE_UNKNOWN,
+			timestamp: timestamp,
+			flight: flight,
+			airline: airline
+		});
+		// Add the flight Number to the flight number array
+		flightKeys.push(flightKey);
+
+		emit FlightAdded(flightKey, airline, flight);
+	}
+
+	/**
+	* @dev Get the list of flights number
+	* @return bytes32[] array of flight numbers
+	*/
+	function getFlightKeys() external view requireIsCallerAuthorized returns(bytes32[] memory) {
+		return flightKeys;
+	}
+
 
 // 	/**
 // 	* @dev Buy insurance for a flight
@@ -172,14 +236,6 @@ contract FlightSuretyData is IFlightSuretyData {
 // 	 *
 // 	*/
 // 	function pay() external pure {
-// 	}
-
-//  /**
-// 	* @dev Initial funding for the insurance. Unless there are too many delayed flights
-// 	*      resulting in insurance payouts, the contract should be self-sustaining
-// 	*
-// 	*/   
-// 	function fund() public payable {
 // 	}
 
 	function getFlightKey(address airline, string memory flight, uint256 timestamp) pure internal returns(bytes32) {
