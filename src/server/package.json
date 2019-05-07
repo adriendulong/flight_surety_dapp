@@ -7,6 +7,7 @@
     "start": "node ."
   },
   "dependencies": {
+    "ethers": "^4.0.27",
     "graphql-yoga": "^1.17.4",
     "web3": "^1.0.0-beta.52"
   }
