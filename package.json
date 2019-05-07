@@ -1,6 +1,10 @@
 {
+  "scripts": {
+    "chain": "ganache-cli -a 30 -m 'health learn must horror nuclear coffee ability faculty twenty steak joy soul'"
+  },
   "dependencies": {
     "chai": "^4.2.0",
+    "eth-gas-reporter": "^0.1.12",
     "openzeppelin-solidity": "^2.2.0",
     "openzeppelin-test-helpers": "^0.3.2"
   }

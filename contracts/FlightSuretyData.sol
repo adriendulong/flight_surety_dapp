@@ -129,7 +129,7 @@ contract FlightSuretyData is IFlightSuretyData {
 	/**
 	* @dev Add an airline to the registered ones
 	*/
-	function _registerAirline(address airline) internal {
+	function _registerAirline(address airline) internal requireIsOperational {
 		registeredAirlines[airline] = true;
 		countRegisteredAirlines = countRegisteredAirlines.add(1);
 		emit AirlineRegistered(airline, countRegisteredAirlines);
@@ -167,7 +167,7 @@ contract FlightSuretyData is IFlightSuretyData {
 	* @dev Let airline funds the smart contract
 	* @param airline address of the airline that funds the smart contract
 	*/
-	function fund(address airline) external payable isRegisteredAirline(airline) requireIsCallerAuthorized {
+	function fund(address airline) external payable isRegisteredAirline(airline) requireIsCallerAuthorized requireIsOperational {
 		partipatingAirlines[airline] = msg.value;
 		emit AirlineParticipating(airline, msg.value);
 	}
@@ -191,7 +191,7 @@ contract FlightSuretyData is IFlightSuretyData {
 	* @param airline address the address of the airline that register this flight
 	*/
 
-	function registerFlight(string calldata flight, uint256 timestamp, address airline) external requireIsCallerAuthorized needAirlineParticipating(airline) {
+	function registerFlight(string calldata flight, uint256 timestamp, address airline) external requireIsCallerAuthorized requireIsOperational needAirlineParticipating(airline) {
 		bytes32 flightKey = getFlightKey(airline, flight, timestamp);
 		require(!flights[flightKey].isRegistered, "FlightSuretyData::registerFlight - This flight is already registered");
 		// Create a new Flight
@@ -214,6 +214,29 @@ contract FlightSuretyData is IFlightSuretyData {
 	*/
 	function getFlightKeys() external view requireIsCallerAuthorized returns(bytes32[] memory) {
 		return flightKeys;
+	}
+
+	/**
+	* @dev Process the flight status
+	* @param airline address of the airline
+	* @param flight string name of the flight
+	* @param timestamp uint256 time of the flight
+	* @param statusCode uint8 Status of the flight
+	*/
+	function processFlightStatus(address airline, string calldata flight, uint256 timestamp, uint8 statusCode) external requireIsCallerAuthorized requireIsOperational {
+		bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+		flights[flightKey].statusCode = statusCode;
+	}
+
+	/**
+	* @dev Get flight status
+	* @param airline address of the airline
+	* @param flight string name of the flight
+	* @param timestamp uint256 time of the flight
+	*/
+	function getFlightStatus(address airline, string calldata flight, uint256 timestamp) external view requireIsCallerAuthorized returns(uint8 statusCode) {
+		bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+		return flights[flightKey].statusCode;
 	}
 
 
