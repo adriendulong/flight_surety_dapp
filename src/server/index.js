@@ -71,8 +71,6 @@ server.start(async () => {
 
 
 async function registerOracle(account) {
-  // let privateKey = '0x08fc749776067a42406a9cb46229e4a8197618c626a3c24aebe3213902a4e45a';
-  // let wallet = new ethers.Wallet(privateKey, provider);
   let contractWithSigner = flightSuretyApp.connect(provider.getSigner(account));
 
   let tx = await contractWithSigner.registerOracle({value: ethers.utils.parseEther('1.0')});
