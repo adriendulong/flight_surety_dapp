@@ -1,26 +1,42 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect } from 'react';
+import { useWeb3Context } from 'web3-react'
+
+import Airline from './components/Airline'
+
 import './App.css';
 
+
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const context = useWeb3Context()
+  let text = "Loading"
+
+  useEffect(() => {
+    context.setConnector('Injected');
+  }, [])
+  
+
+  if (!context.active && !context.error) {
+    return (
+      <div className="App">
+        <p>Loading</p>
+      </div>
+    )
+  } else if (context.error) {
+    text = `Error: ${context.error.message}`
+    return (
+      <div className="App">
+        <p>{text}</p>
+      </div>
+    )
+  } else {
+    text = "Everything ok 👍🏻"
+    return (
+      <div className="App">
+        <p>{text}</p>
+        <Airline/>
+      </div>
+    )
+  }
 }
 
 export default App;
