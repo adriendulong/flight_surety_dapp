@@ -24,7 +24,9 @@ contract FlightSuretyData is IFlightSuretyData {
 		uint256 timestamp;
 		address airline;
 		string flight;
+		bool insurancePaid;
 	}
+
 
 	address private contractOwner;                                      // Account used to deploy contract
 	bool private operational = true;                                    // Blocks all state changes throughout the contract if false
@@ -33,6 +35,10 @@ contract FlightSuretyData is IFlightSuretyData {
 	mapping(address => uint) private partipatingAirlines;						// Airlines that have funds the smart contract and are able to participate
 	mapping(address => uint) private authorizedContracts;						// Contracts authorized to call this one
 	mapping(bytes32 => Flight) private flights;
+	mapping(address => mapping(bytes32 => uint256)) private passengerAssurances;
+	mapping(bytes32 => address[]) private flightInsurees;
+	mapping(address => uint256) private passengerFunds;
+
 
 	bytes32[] public flightKeys;
 
@@ -200,7 +206,8 @@ contract FlightSuretyData is IFlightSuretyData {
 			statusCode: STATUS_CODE_UNKNOWN,
 			timestamp: timestamp,
 			flight: flight,
-			airline: airline
+			airline: airline,
+			insurancePaid: false
 		});
 		// Add the flight Number to the flight number array
 		flightKeys.push(flightKey);
@@ -240,26 +247,65 @@ contract FlightSuretyData is IFlightSuretyData {
 	}
 
 
-// 	/**
-// 	* @dev Buy insurance for a flight
-// 	*
-// 	*/   
-// 	function buy() external payable {
-// 	}
+	/**
+	* @dev Buy insurance for a flight
+	*
+	*/   
+	function buy(address airline, string calldata flight, uint256 timestamp, address passenger) external payable requireIsCallerAuthorized {
+		bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+		passengerAssurances[passenger][flightKey] = passengerAssurances[passenger][flightKey].add(msg.value);
+		flightInsurees[flightKey].push(passenger);
+	}
 
-// 	/**
-// 	*  @dev Credits payouts to insurees
-// 	*/
-// 	function creditInsurees() external pure {
-// 	}
+	/**
+	* Function that returns the amount of funds a passenger has put in a flight insurance
+	*/
+	function getInsuranceFundAmount(address airline, string calldata flight, uint256 timestamp, address passenger) external view requireIsCallerAuthorized returns(uint256) {
+		bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+		return passengerAssurances[passenger][flightKey];
+	}
+
+	/**
+	*  @dev Credits payouts to insurees
+	*/
+	function creditInsurees(address airline, string calldata flight, uint256 timestamp, uint8 creditNumerator, uint8 creditDenominator) external requireIsCallerAuthorized {
+		bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+		require(!flights[flightKey].insurancePaid, "Funds for this flight have already been paid");
+
+		for (uint i = 0; i < flightInsurees[flightKey].length; i++) {
+			address passenger = flightInsurees[flightKey][i];
+			uint256 insuranceAmount = passengerAssurances[passenger][flightKey];
+
+			// Calcule the amount the insuree must be credited
+			uint256 amountToPay = insuranceAmount.mul(creditNumerator).div(creditDenominator);
+			// add funds to the passenger that subscribed an insurance
+			passengerFunds[flightInsurees[flightKey][i]] = passengerFunds[flightInsurees[flightKey][i]].add(amountToPay);
+
+			// set the amount of the insurance to 0 for this passenger
+			passengerAssurances[passenger][flightKey] = 0;
+		}
+
+		// Delete the array that list all the passenger that took an insurance for the flight
+		delete flightInsurees[flightKey];
+	}
+
+	/**
+	* @dev Function that returns the funds a user can withdraw anytime he wants
+	*/
+	function fundsAvailable(address passenger) external view requireIsCallerAuthorized returns(uint256) {
+		return passengerFunds[passenger];
+	}
 		
 
-// 	/**
-// 	 *  @dev Transfers eligible payout funds to insuree
-// 	 *
-// 	*/
-// 	function pay() external pure {
-// 	}
+	/**
+	 *  @dev Transfers eligible payout funds to insuree
+	 *
+	*/
+	function pay(address passenger) external requireIsCallerAuthorized{
+		require(passengerFunds[passenger] > 0, "This passenger has no funds");
+		address payable passengerPayable = address(uint160(bytes20(passenger)));
+		passengerPayable.transfer(passengerFunds[passenger]);
+	}
 
 	function getFlightKey(address airline, string memory flight, uint256 timestamp) pure internal returns(bytes32) {
 		return keccak256(abi.encodePacked(airline, flight, timestamp));

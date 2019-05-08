@@ -36,7 +36,7 @@ let oraclesIndexes = {};
 flightSuretyApp.on("OracleRequest", async (index, airline, flight, timestamp, event) => {
   console.log("OracleRequest", index, airline, flight, timestamp);
   console.log("Block", event.blockNumber);
-  await oracleRepond(index, airline, flight, timestamp);
+  await oracleRepondDelayed(index, airline, flight, timestamp);
 })
 
 flightSuretyApp.on("FlightStatusInfo", (airline, flight, timestamp, status, event) => {
@@ -89,6 +89,17 @@ async function oracleRepond(index, airline, flight, timestamp) {
       console.log("SEND STATUS", STATUS[randomStatus]);
       let contractWithSigner = flightSuretyApp.connect(provider.getSigner(key));
       let tx = await contractWithSigner.submitOracleResponse(index, airline, flight, timestamp, STATUS[randomStatus]);
+      console.log(tx.hash);
+    }
+  }
+}
+
+async function oracleRepondDelayed(index, airline, flight, timestamp) {
+  for(let key in oraclesIndexes) {
+    if(oraclesIndexes[key].includes(index)) {
+      console.log("Oracles need to answer", key);
+      let contractWithSigner = flightSuretyApp.connect(provider.getSigner(key));
+      let tx = await contractWithSigner.submitOracleResponse(index, airline, flight, timestamp, STATUS_CODE_LATE_AIRLINE);
       console.log(tx.hash);
     }
   }

@@ -31,6 +31,8 @@ contract FlightSuretyApp {
 	// Amount minimum to participate
 	uint private constant MINIMUM_AIRLINE_FUNDING = 10 ether;
 
+	uint private constant MAXIMUM_INSURANCE = 1 ether;
+
 	address private contractOwner;          // Account used to deploy contract
 
 	struct Flight {
@@ -156,7 +158,7 @@ contract FlightSuretyApp {
 	* @dev Add an airline
 	* The first four airlines can be added by an existing airline
 	*/
-	function addAirline(address airline) public isParticipatingAirline {
+	function addAirline(address airline) public isParticipatingAirline requireIsOperational {
 		require(flightSuretyData.getNumberRegisteredAirlines() < 4, "FlightSuretyApp::addAirline - Already 4 airlines have been added, you must pas by the queue process");
 		flightSuretyData.registerAirline(airline);
 	}
@@ -164,7 +166,7 @@ contract FlightSuretyApp {
 	/** 
 	* @dev Submit funds to participate
 	*/
-	function submitFunds() public payable isRegisteredAirline {
+	function submitFunds() public payable isRegisteredAirline requireIsOperational {
 		require(msg.value >= MINIMUM_AIRLINE_FUNDING, "FlightSuretyApp::submitFunds - Funds are not enought to be able to participate");
 		flightSuretyData.fund.value(msg.value)(msg.sender);
 	}
@@ -175,7 +177,7 @@ contract FlightSuretyApp {
 	* @param flight string the name of the flight
 	* @param timestamp uint256 the timestamp of the flight
 	*/
-	function registerFlight(string calldata flight, uint256 timestamp) external {
+	function registerFlight(string calldata flight, uint256 timestamp) external requireIsOperational {
 		flightSuretyData.registerFlight(flight, timestamp, msg.sender);
 	}
 
@@ -193,6 +195,7 @@ contract FlightSuretyApp {
 	*/
 	function processFlightStatus(address airline, string memory flight, uint256 timestamp, uint8 statusCode) internal {
 		flightSuretyData.processFlightStatus(airline, flight, timestamp, statusCode);
+		flightSuretyData.creditInsurees(airline, flight, timestamp, 3, 2);
 	}
 
 
@@ -202,7 +205,7 @@ contract FlightSuretyApp {
 	* @param flight string
 	* @param timestamp uint256 of the flight
 	*/
-	function fetchFlightStatus (address airline, string calldata flight, uint256 timestamp) external {
+	function fetchFlightStatus (address airline, string calldata flight, uint256 timestamp) external requireIsOperational {
 		uint8 index = getRandomIndex(msg.sender);
 
 		// Generate a unique key for storing the request
@@ -215,8 +218,35 @@ contract FlightSuretyApp {
 	/**
 	* @dev Get the status of a flight
 	*/
-	function getFlightStatus(address airline, string memory flight, uint256 timestamp) public view returns(uint8 statusCode) {
+	function getFlightStatus(address airline, string calldata flight, uint256 timestamp) external view returns(uint8 statusCode) {
 		return flightSuretyData.getFlightStatus(airline, flight, timestamp);
+	}
+
+	/**
+	* @dev Buy an insurance for a flight
+	*/
+	function buy(address airline, string calldata flight, uint256 timestamp) external payable requireIsOperational {
+		require(msg.value > 0, "You must provide some fund to buy an insurance");
+		require(msg.value <= MAXIMUM_INSURANCE, "You can buy an insurance only up to 1 ether");
+		
+		// We check that event with this amount and the funds he already provided, the passenger won't go over the MAXIMUM_INSURANCE amount
+		uint256 insuranceFund = flightSuretyData.getInsuranceFundAmount(airline, flight, timestamp, msg.sender);
+		uint256 futurAmount = insuranceFund.add(msg.value);
+		require(futurAmount <= MAXIMUM_INSURANCE, "You can buy an insurance only up to 1 ether");
+
+		flightSuretyData.buy.value(msg.value)(airline, flight, timestamp, msg.sender);
+	}
+
+	function getInsuranceFundAmount(address airline, string calldata flight, uint256 timestamp) external view returns(uint256) {
+		return flightSuretyData.getInsuranceFundAmount(airline, flight, timestamp, msg.sender);
+	}
+
+	function getFundsAvailable() external view returns(uint256) {
+		return flightSuretyData.fundsAvailable(msg.sender);
+	}
+
+	function pay() external {
+		flightSuretyData.pay(msg.sender);
 	}
 
 
