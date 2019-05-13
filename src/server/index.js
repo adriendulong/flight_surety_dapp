@@ -1,5 +1,3 @@
-//import FlightSuretyApp from '../../build/contracts/FlightSuretyApp.json';
-//import Config from './config.json';
 const { GraphQLServer } = require('graphql-yoga');
 const ethers = require('ethers');
 const fs = require('fs');
@@ -81,6 +79,14 @@ async function registerOracle(account) {
   oraclesIndexes[account] = newValue;
 }
 
+/**
+ * Function that respond as an oracle when the smart contract trigger
+ * the OracleRequest event
+ * @param {*} index 
+ * @param {*} airline 
+ * @param {*} flight 
+ * @param {*} timestamp 
+ */
 async function oracleRepond(index, airline, flight, timestamp) {
   for(let key in oraclesIndexes) {
     if(oraclesIndexes[key].includes(index)) {
@@ -94,6 +100,14 @@ async function oracleRepond(index, airline, flight, timestamp) {
   }
 }
 
+/**
+ * Same function as 'oracleRepond' however respond only with
+ * 'LATE_AIRLINE' status in order to test the insurance payment
+ * @param {*} index 
+ * @param {*} airline 
+ * @param {*} flight 
+ * @param {*} timestamp 
+ */
 async function oracleRepondDelayed(index, airline, flight, timestamp) {
   for(let key in oraclesIndexes) {
     if(oraclesIndexes[key].includes(index)) {

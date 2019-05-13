@@ -1,7 +1,10 @@
 import React, { useEffect } from 'react';
 import { useWeb3Context } from 'web3-react'
 
-import Airline from './components/Airline'
+import InsurancePayment from './components/InsurancePayment'
+import FetchFlightStatus from './components/FetchFlightStatus'
+import CheckInsurance from './components/CheckInsurance'
+import CheckBalance from './components/CheckBalance'
 
 import './App.css';
 
@@ -29,11 +32,13 @@ function App() {
       </div>
     )
   } else {
-    text = "Everything ok 👍🏻"
     return (
       <div className="App">
-        <p>{text}</p>
-        <Airline/>
+        <h1>Flight Surety Project</h1>
+        <InsurancePayment/>
+        <CheckInsurance/>
+        <FetchFlightStatus/>
+        <CheckBalance/>
       </div>
     )
   }

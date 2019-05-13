@@ -45,6 +45,7 @@ contract FlightSuretyData is IFlightSuretyData {
 	event AirlineRegistered(address airline, uint countAirlines);
 	event AirlineParticipating(address airline, uint participation);
 	event FlightAdded(bytes32 flightKey, address airline, string flight);
+	event BalanceChanged(address passenger);
 	/********************************************************************************************/
 	/*                                       EVENT DEFINITIONS                                  */
 	/********************************************************************************************/
@@ -59,6 +60,10 @@ contract FlightSuretyData is IFlightSuretyData {
 
 		// Add the first airline
 		_registerAirline(firstAirline);
+		_registerFlight("AD001", block.timestamp, firstAirline);
+		_registerFlight("AD002", block.timestamp, firstAirline);
+		_registerFlight("AD003", block.timestamp, firstAirline);
+		_registerFlight("AD004", block.timestamp, firstAirline);
 	}
 
 	/********************************************************************************************/
@@ -198,6 +203,17 @@ contract FlightSuretyData is IFlightSuretyData {
 	*/
 
 	function registerFlight(string calldata flight, uint256 timestamp, address airline) external requireIsCallerAuthorized requireIsOperational needAirlineParticipating(airline) {
+		_registerFlight(flight, timestamp, airline);
+	}
+
+
+	/**
+	* @dev Internal function that create a flight and check that it does not already exists
+	* @param flight string Flight name
+	* @param timestamp uint256 Flight time
+	* @param airline address Airline that creates the flight
+	*/
+	function _registerFlight(string memory flight, uint256 timestamp, address airline) internal {
 		bytes32 flightKey = getFlightKey(airline, flight, timestamp);
 		require(!flights[flightKey].isRegistered, "FlightSuretyData::registerFlight - This flight is already registered");
 		// Create a new Flight
@@ -221,6 +237,22 @@ contract FlightSuretyData is IFlightSuretyData {
 	*/
 	function getFlightKeys() external view requireIsCallerAuthorized returns(bytes32[] memory) {
 		return flightKeys;
+	}
+
+		/**
+	* @dev Get the infos of a flight
+	* @return bytes32[] array of flight numbers
+	*/
+	function getFlightInfos(bytes32 flightKey) external view requireIsCallerAuthorized returns(
+		uint8 statusCode,
+		uint256 timestamp,
+		address airline,
+		string memory flight,
+		bool insurancePaid,
+		bytes32 key
+	) 
+	{
+		return (flights[flightKey].statusCode, flights[flightKey].timestamp, flights[flightKey].airline, flights[flightKey].flight, flights[flightKey].insurancePaid, flightKey);
 	}
 
 	/**
@@ -281,6 +313,8 @@ contract FlightSuretyData is IFlightSuretyData {
 			// add funds to the passenger that subscribed an insurance
 			passengerFunds[flightInsurees[flightKey][i]] = passengerFunds[flightInsurees[flightKey][i]].add(amountToPay);
 
+			emit BalanceChanged(passenger);
+
 			// set the amount of the insurance to 0 for this passenger
 			passengerAssurances[passenger][flightKey] = 0;
 		}
@@ -301,10 +335,12 @@ contract FlightSuretyData is IFlightSuretyData {
 	 *  @dev Transfers eligible payout funds to insuree
 	 *
 	*/
-	function pay(address passenger) external requireIsCallerAuthorized{
+	function pay(address passenger) external requireIsCallerAuthorized {
 		require(passengerFunds[passenger] > 0, "This passenger has no funds");
 		address payable passengerPayable = address(uint160(bytes20(passenger)));
-		passengerPayable.transfer(passengerFunds[passenger]);
+		uint256 toPay = passengerFunds[passenger];
+		delete passengerFunds[passenger];
+		passengerPayable.transfer(toPay);
 	}
 
 	function getFlightKey(address airline, string memory flight, uint256 timestamp) pure internal returns(bytes32) {

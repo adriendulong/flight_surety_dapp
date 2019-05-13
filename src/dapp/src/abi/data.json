@@ -1,23 +1,28 @@
 [
 	{
 		"constant": true,
-		"inputs": [],
-		"name": "flightSuretyData",
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "flightKeys",
 		"outputs": [
 			{
 				"name": "",
-				"type": "address"
+				"type": "bytes32"
 			}
 		],
 		"payable": false,
 		"stateMutability": "view",
 		"type": "function",
-		"signature": "0x3f001f8d"
+		"signature": "0x3d21d827"
 	},
 	{
 		"constant": true,
 		"inputs": [],
-		"name": "REGISTRATION_FEE",
+		"name": "countRegisteredAirlines",
 		"outputs": [
 			{
 				"name": "",
@@ -27,12 +32,12 @@
 		"payable": false,
 		"stateMutability": "view",
 		"type": "function",
-		"signature": "0x64b4f751"
+		"signature": "0x518a0b53"
 	},
 	{
 		"inputs": [
 			{
-				"name": "contractData",
+				"name": "firstAirline",
 				"type": "address"
 			}
 		],
@@ -48,11 +53,16 @@
 				"indexed": false,
 				"name": "airline",
 				"type": "address"
+			},
+			{
+				"indexed": false,
+				"name": "countAirlines",
+				"type": "uint256"
 			}
 		],
-		"name": "AirlineQueued",
+		"name": "AirlineRegistered",
 		"type": "event",
-		"signature": "0x3fcb833c279f3545dc2ef79c67c9da2cc361d1d806e0e62637948c1f026396b2"
+		"signature": "0x4e89f34ef1586aa7cb3ba0fb413cd5678085f191a4442e087cebf2f076f3b0a2"
 	},
 	{
 		"anonymous": false,
@@ -64,59 +74,21 @@
 			},
 			{
 				"indexed": false,
-				"name": "flight",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"name": "timestamp",
+				"name": "participation",
 				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"name": "status",
-				"type": "uint8"
 			}
 		],
-		"name": "FlightStatusInfo",
+		"name": "AirlineParticipating",
 		"type": "event",
-		"signature": "0xe23f5229de535c091e3b7bec2665f5d698192d3b31393066e8987b7a05076b6c"
+		"signature": "0xa243e88adbc8cd2371b6f6d047d781f70361a2481618367b3b089561f0a97467"
 	},
 	{
 		"anonymous": false,
 		"inputs": [
 			{
 				"indexed": false,
-				"name": "airline",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"name": "flight",
-				"type": "string"
-			},
-			{
-				"indexed": false,
-				"name": "timestamp",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"name": "status",
-				"type": "uint8"
-			}
-		],
-		"name": "OracleReport",
-		"type": "event",
-		"signature": "0x43c853095c2752648493c88b4baac4d580d2594ffb00c6f1d4242d844514f783"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"name": "index",
-				"type": "uint8"
+				"name": "flightKey",
+				"type": "bytes32"
 			},
 			{
 				"indexed": false,
@@ -127,20 +99,57 @@
 				"indexed": false,
 				"name": "flight",
 				"type": "string"
-			},
-			{
-				"indexed": false,
-				"name": "timestamp",
-				"type": "uint256"
 			}
 		],
-		"name": "OracleRequest",
+		"name": "FlightAdded",
 		"type": "event",
-		"signature": "0x3ed01f2c3fc24c6b329d931e35b03e390d23497d22b3f90e15b600343e93df11"
+		"signature": "0xfa0b50e7ac0242a932b75fae087bad73662108fc4b1a883fd30eb888123e88a3"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "passenger",
+				"type": "address",
+				"indexed": false
+			}
+		],
+		"name": "BalanceChanged",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "event",
+		"signature": "0xb9b8a6f5b5776563f2c6478897492499e1b0c907edb2d2ba0cddc34981ea2517",
+		"anonymous": false
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "contractAddress",
+				"type": "address"
+			}
+		],
+		"name": "authorizeContract",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function",
+		"signature": "0x67561d93"
 	},
 	{
 		"constant": true,
-		"inputs": [],
+		"inputs": [
+			{
+				"name": "mode",
+				"type": "bool"
+			}
+		],
 		"name": "isOperational",
 		"outputs": [
 			{
@@ -151,42 +160,17 @@
 		"payable": false,
 		"stateMutability": "view",
 		"type": "function",
-		"signature": "0xcd905dff"
+		"signature": "0x50f17dad"
 	},
 	{
 		"constant": false,
 		"inputs": [
 			{
-				"name": "change",
+				"name": "mode",
 				"type": "bool"
 			}
 		],
-		"name": "setOperational",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function",
-		"signature": "0x500b94aa"
-	},
-	{
-		"constant": false,
-		"inputs": [],
-		"name": "queueAirline",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function",
-		"signature": "0x045c1776"
-	},
-	{
-		"constant": false,
-		"inputs": [
-			{
-				"name": "airline",
-				"type": "address"
-			}
-		],
-		"name": "voteAirline",
+		"name": "setOperatingStatus",
 		"outputs": [
 			{
 				"name": "",
@@ -196,7 +180,27 @@
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function",
-		"signature": "0xd8ab5b89"
+		"signature": "0x110466ed"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "airline",
+				"type": "address"
+			}
+		],
+		"name": "getNumberRegisteredAirlines",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function",
+		"signature": "0xbe9ea481"
 	},
 	{
 		"constant": false,
@@ -206,22 +210,85 @@
 				"type": "address"
 			}
 		],
-		"name": "addAirline",
-		"outputs": [],
+		"name": "registerAirline",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function",
-		"signature": "0x3a0295d1"
+		"signature": "0xbdfd9877"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "airline",
+				"type": "address"
+			}
+		],
+		"name": "isAirlineRegistered",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function",
+		"signature": "0x010c5c97"
 	},
 	{
 		"constant": false,
-		"inputs": [],
-		"name": "submitFunds",
-		"outputs": [],
+		"inputs": [
+			{
+				"name": "airline",
+				"type": "address"
+			}
+		],
+		"name": "fund",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
 		"payable": true,
 		"stateMutability": "payable",
 		"type": "function",
-		"signature": "0x513b0fc9"
+		"signature": "0x23024408"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "airline",
+				"type": "address"
+			},
+			{
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"name": "airline",
+				"type": "address"
+			}
+		],
+		"name": "isAirlineParticipating",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function",
+		"signature": "0x2230cd88"
 	},
 	{
 		"constant": false,
@@ -233,19 +300,13 @@
 			{
 				"name": "timestamp",
 				"type": "uint256"
+			},
+			{
+				"name": "airline",
+				"type": "address"
 			}
 		],
 		"name": "registerFlight",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function",
-		"signature": "0x39cfc995"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getFlightKeys",
 		"outputs": [
 			{
 				"name": "",
@@ -253,9 +314,9 @@
 			}
 		],
 		"payable": false,
-		"stateMutability": "view",
+		"stateMutability": "nonpayable",
 		"type": "function",
-		"signature": "0x6534ff05"
+		"signature": "0x65c152f7"
 	},
 	{
 		"constant": true,
@@ -263,6 +324,58 @@
 			{
 				"name": "flightKey",
 				"type": "bytes32"
+			}
+		],
+		"name": "getFlightKeys",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bytes32[]"
+			},
+			{
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"name": "airline",
+				"type": "address"
+			},
+			{
+				"name": "flight",
+				"type": "string"
+			},
+			{
+				"name": "insurancePaid",
+				"type": "bool"
+			},
+			{
+				"name": "key",
+				"type": "bytes32"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function",
+		"signature": "0x79c728fc"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "flightKey",
+				"type": "bytes32"
+			},
+			{
+				"name": "flight",
+				"type": "string"
+			},
+			{
+				"name": "timestamp",
+				"type": "uint256"
+			},
+			{
+				"name": "statusCode",
+				"type": "uint8"
 			}
 		],
 		"name": "getFlightInfos",
@@ -295,7 +408,7 @@
 		"payable": false,
 		"stateMutability": "view",
 		"type": "function",
-		"signature": "0x432f7306"
+		"signature": "0xa2c8c820"
 	},
 	{
 		"constant": false,
@@ -311,14 +424,23 @@
 			{
 				"name": "timestamp",
 				"type": "uint256"
+			},
+			{
+				"name": "statusCode",
+				"type": "uint8"
 			}
 		],
-		"name": "fetchFlightStatus",
-		"outputs": [],
+		"name": "processFlightStatus",
+		"outputs": [
+			{
+				"name": "statusCode",
+				"type": "uint8"
+			}
+		],
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function",
-		"signature": "0xf83f11c0"
+		"signature": "0xe7bdde3b"
 	},
 	{
 		"constant": true,
@@ -334,6 +456,10 @@
 			{
 				"name": "timestamp",
 				"type": "uint256"
+			},
+			{
+				"name": "passenger",
+				"type": "address"
 			}
 		],
 		"name": "getFlightStatus",
@@ -346,7 +472,7 @@
 		"payable": false,
 		"stateMutability": "view",
 		"type": "function",
-		"signature": "0x9de5f957"
+		"signature": "0x1c834da4"
 	},
 	{
 		"constant": false,
@@ -362,14 +488,23 @@
 			{
 				"name": "timestamp",
 				"type": "uint256"
+			},
+			{
+				"name": "passenger",
+				"type": "address"
 			}
 		],
 		"name": "buy",
-		"outputs": [],
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
 		"payable": true,
 		"stateMutability": "payable",
 		"type": "function",
-		"signature": "0xb1c46d22"
+		"signature": "0x4f253f6e"
 	},
 	{
 		"constant": true,
@@ -385,6 +520,14 @@
 			{
 				"name": "timestamp",
 				"type": "uint256"
+			},
+			{
+				"name": "passenger",
+				"type": "address"
+			},
+			{
+				"name": "creditDenominator",
+				"type": "uint8"
 			}
 		],
 		"name": "getInsuranceFundAmount",
@@ -397,70 +540,11 @@
 		"payable": false,
 		"stateMutability": "view",
 		"type": "function",
-		"signature": "0x746f0b73"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getFundsAvailable",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function",
-		"signature": "0xc3100531"
-	},
-	{
-		"constant": false,
-		"inputs": [],
-		"name": "pay",
-		"outputs": [],
-		"payable": false,
-		"stateMutability": "nonpayable",
-		"type": "function",
-		"signature": "0x1b9265b8"
-	},
-	{
-		"constant": false,
-		"inputs": [],
-		"name": "registerOracle",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint8[3]"
-			}
-		],
-		"payable": true,
-		"stateMutability": "payable",
-		"type": "function",
-		"signature": "0x339d2590"
-	},
-	{
-		"constant": true,
-		"inputs": [],
-		"name": "getMyIndexes",
-		"outputs": [
-			{
-				"name": "",
-				"type": "uint8[3]"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function",
-		"signature": "0x5f1cc0e6"
+		"signature": "0x62960b02"
 	},
 	{
 		"constant": false,
 		"inputs": [
-			{
-				"name": "index",
-				"type": "uint8"
-			},
 			{
 				"name": "airline",
 				"type": "address"
@@ -474,15 +558,59 @@
 				"type": "uint256"
 			},
 			{
-				"name": "statusCode",
+				"name": "creditNumerator",
+				"type": "uint8"
+			},
+			{
+				"name": "creditDenominator",
 				"type": "uint8"
 			}
 		],
-		"name": "submitOracleResponse",
+		"name": "creditInsurees",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function",
+		"signature": "0x44921a0b"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "passenger",
+				"type": "address"
+			}
+		],
+		"name": "fundsAvailable",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function",
+		"signature": "0xa0010c62"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "passenger",
+				"type": "address"
+			}
+		],
+		"name": "pay",
 		"outputs": [],
 		"payable": false,
 		"stateMutability": "nonpayable",
 		"type": "function",
-		"signature": "0xc10f2700"
+		"signature": "0x0c11dedd"
 	}
 ]

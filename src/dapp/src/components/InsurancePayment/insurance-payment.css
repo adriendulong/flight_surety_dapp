@@ -1,0 +1,30 @@
+#insurance-payment{
+  display: flex;
+  height: 300px;
+  justify-content: center;
+  align-items: center;
+  flex-flow: column wrap;
+}
+
+.column-form{
+  display: flex;
+  flex-flow: column wrap;
+  width: 300px;
+  justify-content: space-around;
+}
+
+.column-form select{
+  margin: 10px;
+}
+
+.column-form label{
+  margin-top: 20px;
+}
+
+.column-form input{
+  margin: 10px;
+}
+
+.column-form button{
+  margin: 10px;
+}

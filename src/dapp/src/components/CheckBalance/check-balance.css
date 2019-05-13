@@ -1,0 +1,11 @@
+#check-balance{
+  display: flex;
+  height: 200px;
+  justify-content: center;
+  align-items: center;
+  flex-flow: column wrap;
+}
+
+#balance-updated{
+  color: red;
+}

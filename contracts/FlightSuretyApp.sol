@@ -190,6 +190,22 @@ contract FlightSuretyApp {
 	}
 
 	/**
+	* @dev getFlightInfos returns all the detail about a flight depending its key
+	*/
+	function getFlightInfos(bytes32 flightKey) public view returns
+	(
+		uint8 statusCode,
+		uint256 timestamp,
+		address airline,
+		string memory flight,
+		bool insurancePaid,
+		bytes32 key
+	)
+	{
+		return flightSuretyData.getFlightInfos(flightKey); 
+	}
+
+	/**
 	* @dev Called after oracle has updated flight status
 	*
 	*/
@@ -245,7 +261,7 @@ contract FlightSuretyApp {
 		return flightSuretyData.fundsAvailable(msg.sender);
 	}
 
-	function pay() external {
+	function pay() external requireIsOperational {
 		flightSuretyData.pay(msg.sender);
 	}
 

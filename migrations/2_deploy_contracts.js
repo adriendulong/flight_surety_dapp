@@ -9,7 +9,9 @@ module.exports = function(deployer) {
   .then(() => {
     console.log(`ADDRESS: ${FlightSuretyData.address}`)
     return deployer.deploy(FlightSuretyApp, FlightSuretyData.address)
-      .then(() => {
+      .then(async () => {
+        const flightSuretyData = await FlightSuretyData.deployed()
+        await flightSuretyData.authorizeContract(FlightSuretyApp.address);
         let config = {
           localhost: {
             url: 'http://localhost:8545',
@@ -18,6 +20,7 @@ module.exports = function(deployer) {
           }
         }
         fs.writeFileSync(__dirname + '/../src/dapp/src/abi/app.json',JSON.stringify(FlightSuretyApp.abi, null, '\t'), 'utf-8');
+        fs.writeFileSync(__dirname + '/../src/dapp/src/abi/data.json',JSON.stringify(FlightSuretyData.abi, null, '\t'), 'utf-8');
         fs.writeFileSync(__dirname + '/../src/dapp/src/config.json',JSON.stringify(config, null, '\t'), 'utf-8');
         fs.writeFileSync(__dirname + '/../src/server/config.json',JSON.stringify(config, null, '\t'), 'utf-8');
       });
