@@ -2,27 +2,27 @@
 
 This project is developed in the context of the [Udacity Blockchain Nanodegree](https://eu.udacity.com/course/blockchain-developer-nanodegree--nd1309)
 
-The goal of this project is to build a dApp (Decentralized application) using smart contract and web3 technology.
-This project tackles this specific points:
-* Multy-party consensus
+The goal of this project is to build a dApp (Decentralized application) using smart contracts and web3 technology.
+This project tackles these specific points:
+* Multi-party consensus
 * Oracles
 * Receive, transfer and send funds
-* Smart Contract upgradibility
+* Smart Contract upgradability
 * Fail fast contracts
 
 In this app a passenger can:
-* Subscribe an insurance to a flight
-* If the flight is delayed due to the company the passenger will get 1.5x the amount of ether he put in the the insurance
+* Subscribe insurance to a flight
+* If the flight is delayed due to the company the passenger will get 1.5x the amount of ether he put in the insurance
 * The passenger can withdraw the ether from the smart contract
 
-For airlines the smart contract allows to:
+For airlines, the smart contract allows to:
 * Submit a new airline to the smart contract
-* Vote for a new airline in order to reach a 50% consensus
+* Vote for a new airline to reach a 50% consensus
 * Add a flight
 
-We have a server that simulate the behavior of oracles that:
-* Listen to a specific event that the smart contract will trigger when infos about a flight is needed
-* Generate the infos about a flights and send them to the smart contract
+We have a server that simulates the behavior of oracles that:
+* Listen to a specific event that the smart contract will trigger when info about a flight is needed
+* Generate the info about flights and send them to the smart contract
 
 ##  How to use and deploys the app
 1) **Compile the smart contracts**: from the root of the project make a `truffle compile` (you must have truffle installed globally)
@@ -37,24 +37,24 @@ We have a server that simulate the behavior of oracles that:
 
 ## Use the dapp
 
-*Get an insurance for a flight*
+*Get insurance for a flight*
 
-The first block allows you to choose a flight, enter an amount of ETH and validate in order to get an insurance for a flight.
+The first block allows you to choose a flight, enter an amount of ETH and validate to get insurance for a flight.
 You should not be able to put more than 1 ETH by flight.
 
 *Check Insurance amount*
 
-The second block allow you to check the amount you put in an insurance for a specific flight
+The second block allows you to check the amount you put in insurance for a specific flight
 
 *Fetch flight status*
 
 Choose a flight and click on the button. It will trigger the event that the Oracles listened. 
 Oracles will answer with the flight status.
 For testing purpose, the Oracles will give back a status that triggers the insurance.
-At the bottom of the screen you should see your balance being updated (you received 1.5x the amount you put in the assurance, however your funds are still on the smart contract, you must withdraw them in order to
-get them in your own wallet).
+At the bottom of the screen you should see your balance being updated (you received 1.5x the amount you put in the assurance, however your funds are still on the smart contract, you must withdraw them to
+get them in your wallet).
 
 *Your balance*
 
-Here you have the amount of ETH you own and that the smart contract still hold. 
+Here you have the amount of ETH you own and that the smart contract still holds. 
 You can withdraw them whenever you want.
