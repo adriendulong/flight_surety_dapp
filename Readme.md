@@ -28,8 +28,9 @@ We have a server that simulates the behavior of oracles that:
 1) **Compile the smart contracts**: from the root of the project make a `truffle compile` (you must have truffle installed globally)
 2) **Run the local chain** doing `npm run chain` or `yarn run chain`
 3) **Deploy the smart contract**  doing `truffle migrate`
-4) **Launch the server** doing `cd src/server && npm start`
-5) **Launch the dapp** doing (from the project root) `cd src/dapp && npm start`
+4) **Launch the server** doing `cd src/server && npm i && npm start`
+5) **Launch the dapp** doing (from the project root) `cd src/dapp && npm i && npm start` (**IMPORTANT**: be sure to launch the dapp only once the smart contract have been deployed, since the dapp use files that are exported when smart contracts are deployed)
+6) **Connect Metamask** to a custom JSON RPC : `http://127.0.0.1:8545` (and be sure to re intialize Metamask each time your recompile et re migrate the smart contracts)
 
 ## How to test the smart contracts
 1) **Run the local chain** doing `npm run chain` or `yarn run chain`
